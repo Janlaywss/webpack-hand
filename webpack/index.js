@@ -1,6 +1,7 @@
 const path = require('path');
 const Compiler = require('./Compiler');
 const NodeEnvironmentPlugin = require('./plugins/NodeEnvironmentPlugin');
+const WebpackOptionsApply = require('./WebpackOptionsApply');
 
 const webpack = (options) => {
     options.context = options.context || path.resolve(process.cwd());
@@ -16,6 +17,8 @@ const webpack = (options) => {
 
     compiler.hooks.environment.call();
     compiler.hooks.afterEnvironment.call();
+
+    new WebpackOptionsApply().process(options, compiler);
 
     return compiler;
 };

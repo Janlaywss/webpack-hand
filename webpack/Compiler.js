@@ -1,4 +1,4 @@
-const {Tapable, SyncHook} = require('tapable');
+const {Tapable, SyncHook, SyncBailHook, AsyncParallelHook} = require('tapable');
 
 class Compiler extends Tapable {
     constructor(context) {
@@ -8,6 +8,8 @@ class Compiler extends Tapable {
         this.hooks = {
             environment: new SyncHook([]),
             afterEnvironment: new SyncHook([]),
+            entryOptions: new SyncBailHook(['context', 'entry']),
+            make: new AsyncParallelHook(['compilation'])
         };
 
         // // 名称
@@ -18,6 +20,7 @@ class Compiler extends Tapable {
     }
 
     run() {
+        console.log('compile run')
     }
 }
 
