@@ -8,3 +8,4 @@
 1. 测试环境的搭建
 2. 提取webpack hamory runtime 模版
 3. 初始化tapable环境
+4. 初始化基础插件，支持单entry能力，监听make事件
