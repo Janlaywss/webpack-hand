@@ -23,7 +23,7 @@ const webpack = (options) => {
     // 执行 afterEnvironment 钩子
     compiler.hooks.afterEnvironment.call();
 
-    // 初始化我们的入口解析器，模块解析器
+    // 初始化我们的内置插件环境
     new WebpackOptionsApply().process(options, compiler);
 
     return compiler;
