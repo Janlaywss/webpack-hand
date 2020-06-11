@@ -6,6 +6,7 @@ class SingleEntryPlugin {
     }
 
     apply(compiler) {
+        // 监听钩子执行，如果执行的话开始编译
         compiler.hooks.make.tapAsync(
             'SingleEntryPlugin',
             (compiler, callback) => {
