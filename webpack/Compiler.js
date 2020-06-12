@@ -15,8 +15,6 @@ class Compiler extends Tapable {
             afterEnvironment: new SyncHook([]),
             // 入口文件增加钩子
             entryOptions: new SyncBailHook(['context', 'entry']),
-            // 构建对象初始化完成
-            make: new AsyncParallelHook(['compilation']),
             // run之前
             beforeRun: new AsyncSeriesHook(["compiler"]),
             // run
@@ -29,6 +27,8 @@ class Compiler extends Tapable {
             thisCompilation: new SyncHook(["compilation", "params"]),
             // compilation
             compilation: new SyncHook(["compilation", "params"]),
+            // 构建对象初始化完成
+            make: new AsyncParallelHook(['compilation']),
         };
 
         // // 名称
