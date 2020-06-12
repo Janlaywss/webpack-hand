@@ -11,6 +11,12 @@ class NormalModule {
         this._source = null;
         // AST抽象语法树
         this._ast = null;
+        // 依赖数组
+        this.dependencies = []
+    }
+
+    build(compilation, callback) {
+        callback()
     }
 }
 

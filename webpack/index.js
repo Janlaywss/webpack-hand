@@ -6,7 +6,7 @@ const WebpackOptionsApply = require('./WebpackOptionsApply');
 const webpack = (options) => {
     // 设置目录默认为当前工作目录
     options.context = options.context || path.resolve(process.cwd());
-    let compiler = new Compiler();
+    let compiler = new Compiler(options.context);
     compiler.options = options;
     // 初始化Node环境
     new NodeEnvironmentPlugin().apply(compiler);
