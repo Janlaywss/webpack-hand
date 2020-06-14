@@ -1,5 +1,6 @@
 const {Tapable, SyncHook} = require('tapable');
 const path = require('path');
+const async = require('neo-async');
 const NormalModuleFactory = require('./NormalModuleFactory');
 const Parser = require('./Parser');
 
@@ -56,6 +57,34 @@ class Compilation extends Tapable {
             }
         };
         this.buildModule(module, afterBuild);
+    }
+
+    processModuleDependencies(module, callback) {
+        let dependencies = module.dependencies;
+        async.forEach(dependencies, (dependency, done) => {
+            let {name, context, rawRequest, resource, moduleId, parser} = dependency;
+            const moduleFactory = new NormalModuleFactory();
+            let module = moduleFactory.create({
+                name, context, rawRequest, resource, moduleId, parser
+            });
+
+            if (!this._modules[module.moduleId]) {
+                this.modules.push(module);
+                this._modules[module.moduleId] = module;
+            }
+
+            const afterBuild = () => {
+                if (module.dependencies) {
+                    this.processModuleDependencies(module, err => {
+                        done(null, module);
+                    });
+                } else {
+                    return done(null, module);
+                }
+            };
+
+            this.buildModule(module, afterBuild);
+        }, callback);
     }
 
     buildModule(module, afterBuild) {
