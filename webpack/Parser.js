@@ -6,7 +6,10 @@ class Parser extends Tapable {
         super();
     }
     parse(source) {
-        return babylon.parse(source, { sourceType: 'module', plugins: ['dynamicImport'] });
+        return babylon.parse(source, {
+            sourceType: 'module',
+            plugins: ['dynamicImport'],
+        });
     }
 }
 module.exports = Parser;

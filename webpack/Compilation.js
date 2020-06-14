@@ -64,10 +64,12 @@ class Compilation extends Tapable {
         async.forEach(dependencies, (dependency, done) => {
             let {name, context, rawRequest, resource, moduleId, parser} = dependency;
             const moduleFactory = new NormalModuleFactory();
+            // 使用模块工厂构建模块对象
             let module = moduleFactory.create({
                 name, context, rawRequest, resource, moduleId, parser
             });
 
+            // 避免重复添加模块
             if (!this._modules[module.moduleId]) {
                 this.modules.push(module);
                 this._modules[module.moduleId] = module;
@@ -75,6 +77,7 @@ class Compilation extends Tapable {
 
             const afterBuild = () => {
                 if (module.dependencies) {
+                    // 递归创建模块对象
                     this.processModuleDependencies(module, err => {
                         done(null, module);
                     });
