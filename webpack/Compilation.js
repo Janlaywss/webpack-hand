@@ -9,6 +9,8 @@ const parser = new Parser();
 class Compilation extends Tapable {
     constructor(compiler) {
         super();
+        // 模块依赖工厂map
+        this.dependencyFactories = new Map();
         // compiler 对象
         this.compiler = compiler;
         this.options = compiler.options;
@@ -30,15 +32,17 @@ class Compilation extends Tapable {
         });
     }
 
-    _addModuleChain(context, entry, name, callback) {
-        // 创建模块工厂
-        const moduleFactory = new NormalModuleFactory();
+    _addModuleChain(context, dependency, name, callback) {
+        // 拿到 dependency 的构造函数
+        const Dep = dependency.constructor;
+        // 获取到Dep对应的模块工厂（模块和模块之间工厂方法不同）
+        const moduleFactory = this.dependencyFactories.get(Dep);
         // 创建模块
         const module = moduleFactory.create({
             name,
             context: this.context,
-            rawRequest: entry,
-            resource: path.posix.join(context, entry),
+            rawRequest: dependency.request,
+            resource: path.posix.join(context, dependency.request),
             parser
         });
         // 构建模块ID（和文件相对路径一致）
