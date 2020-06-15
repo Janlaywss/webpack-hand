@@ -23,6 +23,8 @@ class Compiler extends Tapable {
             beforeCompile: new AsyncSeriesHook(["params"]),
             // 构建
             compile: new SyncHook(["params"]),
+            // 构建后
+            afterCompile: new SyncHook(["params"]),
             // compilation 初始化前
             thisCompilation: new SyncHook(["compilation", "params"]),
             // compilation
@@ -62,8 +64,11 @@ class Compiler extends Tapable {
             const compilation = this.newCompilation(params);
             // 开始make
             this.hooks.make.callAsync(compilation, err => {
-                console.log('make完成');
-                onCompiled(err, compilation);
+                compilation.seal(err => {
+                    this.hooks.afterCompile.callAsync(compilation, err => {
+                        return onCompiled(null, compilation);
+                    });
+                });
             });
         })
     }

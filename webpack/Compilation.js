@@ -3,6 +3,7 @@ const path = require('path');
 const async = require('neo-async');
 const NormalModuleFactory = require('./NormalModuleFactory');
 const Parser = require('./Parser');
+const Chunk = require('./Chunk');
 
 const parser = new Parser();
 
@@ -18,11 +19,30 @@ class Compilation extends Tapable {
         this.inputFileSystem = compiler.inputFileSystem;
         this.outputFileSystem = compiler.outputFileSystem;
         this.entries = [];
+        this.chunks = [];
         this.modules = [];
         this._modules = {};
         this.hooks = {
-            succeedModule: new SyncHook(["module"])
+            buildModule: new SyncHook(["module"]),
+            succeedModule: new SyncHook(["module"]),
+            seal: new SyncHook([]),
+            beforeChunks: new SyncHook([]),
+            afterChunks: new SyncHook(["chunks"])
         }
+    }
+
+    seal(callback) {
+        this.hooks.seal.call();
+        //生成代码块之前
+        this.hooks.beforeChunks.call();
+        for (const module of this.entries) { // 循环入口模块
+            const chunk = new Chunk(module); // 创建代码块
+            this.chunks.push(chunk); // 把代码块添加到代码块数组中
+            // 把代码块的模块添加到代码块中
+            chunk.modules = this.modules.filter(module => module.name === chunk.name);
+        }
+        this.hooks.afterChunks.call(this.chunks);// 生成代码块之后
+        callback();// 封装结束
     }
 
     addEntry(context, entry, name, callback) {
@@ -54,9 +74,11 @@ class Compilation extends Tapable {
             // 如果依赖项 > 0，递归调用
             if (module.dependencies.length > 0) {
                 this.processModuleDependencies(module, err => {
+                    this.hooks.succeedModule.call(module);
                     callback(null, module);
                 });
             } else {
+                this.hooks.succeedModule.call(module);
                 return callback(null, module);
             }
         };
@@ -95,6 +117,7 @@ class Compilation extends Tapable {
     }
 
     buildModule(module, afterBuild) {
+        this.hooks.buildModule.call(module);
         // 调用 module 自己的编译方法
         module.build(this, (err) => {
             this.hooks.succeedModule.call(module);

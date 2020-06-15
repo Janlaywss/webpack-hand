@@ -29,3 +29,9 @@
 1. 接入babylon进行ast解析
 2. require函数转换
 3. 接入 neo-async 进行递归编译
+
+#### Part5: 编译结束并产出文件
+
+1. seal 钩子 + 生成代码块
+2. 使用ejs写入文件系统
+3. emit钩子

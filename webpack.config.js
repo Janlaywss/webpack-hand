@@ -1,4 +1,5 @@
 const path = require('path');
+const TestPlugin = require('./plugins/TestPlugin');
 
 module.exports = {
     context: process.cwd(),
@@ -10,6 +11,6 @@ module.exports = {
         filename: "[name].js"
     },
     plugins: [
-        // new TestPlugin()
+        new TestPlugin()
     ]
 };
