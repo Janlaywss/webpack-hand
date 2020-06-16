@@ -1,11 +1,15 @@
 const {Tapable, SyncHook} = require('tapable');
 const path = require('path');
+const fs = require('fs');
+const ejs = require('ejs');
 const async = require('neo-async');
 const NormalModuleFactory = require('./NormalModuleFactory');
 const Parser = require('./Parser');
 const Chunk = require('./Chunk');
 
 const parser = new Parser();
+const mainTemplate = fs.readFileSync(path.join(__dirname, 'template', 'runtime-bundle.ejs'), 'utf8');
+const mainRender = ejs.compile(mainTemplate);
 
 class Compilation extends Tapable {
     constructor(compiler) {
@@ -20,6 +24,8 @@ class Compilation extends Tapable {
         this.outputFileSystem = compiler.outputFileSystem;
         this.entries = [];
         this.chunks = [];
+        this.files = [];  //生成的文件
+        this.assets = {}; //资源
         this.modules = [];
         this._modules = {};
         this.hooks = {
@@ -42,7 +48,24 @@ class Compilation extends Tapable {
             chunk.modules = this.modules.filter(module => module.name === chunk.name);
         }
         this.hooks.afterChunks.call(this.chunks);// 生成代码块之后
+        this.createChunkAssets();
         callback();// 封装结束
+    }
+
+    createChunkAssets() {
+        for (let i = 0; i < this.chunks.length; i++) {
+            const chunk = this.chunks[i];
+            chunk.files = [];
+            const file = chunk.name + '.js';
+            const source = mainRender({entryId: chunk.entryModule.moduleId, modules: chunk.modules});
+            chunk.files.push(file);
+            this.emitAsset(file, source);
+        }
+    }
+
+    emitAsset(file, source) {
+        this.assets[file] = source;
+        this.files.push(file);
     }
 
     addEntry(context, entry, name, callback) {

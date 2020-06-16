@@ -1,4 +1,6 @@
 const {Tapable, SyncHook, SyncBailHook, AsyncParallelHook, AsyncSeriesHook} = require('tapable');
+const mkdirp = require('mkdirp');
+const path = require('path');
 const NormalModuleFactory = require('./NormalModuleFactory');
 const Compilation = require('./Compilation');
 const Stats = require('./Stats');
@@ -31,6 +33,10 @@ class Compiler extends Tapable {
             compilation: new SyncHook(["compilation", "params"]),
             // 构建对象初始化完成
             make: new AsyncParallelHook(['compilation']),
+            // 构建完成
+            emit: new AsyncSeriesHook(["compilation"]),
+            // 构建结束
+            done: new AsyncSeriesHook(["stats"])
         };
 
         // // 名称
@@ -40,11 +46,32 @@ class Compiler extends Tapable {
         // this.outputFileSystem = null;
     }
 
+    emitAssets(compilation, callback) {
+        const emitFiles = err => {
+            let assets = compilation.assets;
+            for (let file in assets) {
+                let source = assets[file];
+                const targetPath = path.posix.join(this.options.output.path, file);
+                let content = source;
+                this.outputFileSystem.writeFileSync(targetPath, content);
+            }
+            callback();
+        };
+
+        this.hooks.emit.callAsync(compilation, err => {
+            mkdirp(this.options.output.path).then(emitFiles);
+        });
+    }
+
     run(finalCallback) {
         // 终极回调，并执行 finalCallback，传入 Stats
         const onCompiled = (err, compilation) => {
-            console.log('onCompiled');
-            finalCallback(err, new Stats(compilation))
+            this.emitAssets(compilation, err => {
+                const stats = new Stats(compilation);
+                this.hooks.done.callAsync(stats, err => {
+                    finalCallback(err, new Stats(compilation))
+                });
+            })
         };
 
         this.hooks.beforeRun.callAsync(this, () => {
