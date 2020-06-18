@@ -1,4 +1,5 @@
 let SingleEntryDependency = require('../dependencies/SingleEntryDependency');
+let ModuleDependency = require('../dependencies/ModuleDependency');
 
 class SingleEntryPlugin {
     constructor(context, entry, name) {
@@ -14,6 +15,12 @@ class SingleEntryPlugin {
                 // 向模块依赖工厂map set一个单入口依赖工厂
                 compilation.dependencyFactories.set(
                     SingleEntryDependency,
+                    normalModuleFactory
+                );
+
+                // 向模块依赖工厂map set一个单入口依赖工厂
+                compilation.dependencyFactories.set(
+                    ModuleDependency,
                     normalModuleFactory
                 );
             }

@@ -4,6 +4,7 @@ class Chunk {
         this.name = module.name;
         this.files = [];
         this.modules = [];
+        this.async = module.async;
     }
 }
 

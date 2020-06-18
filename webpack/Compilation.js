@@ -11,6 +11,9 @@ const parser = new Parser();
 const mainTemplate = fs.readFileSync(path.join(__dirname, 'template', 'runtime-bundle.ejs'), 'utf8');
 const mainRender = ejs.compile(mainTemplate);
 
+const chunkTemplate = fs.readFileSync(path.join(__dirname, 'template', 'runtime-chunk.ejs'), 'utf8');
+const chunkRender = ejs.compile(chunkTemplate);
+
 class Compilation extends Tapable {
     constructor(compiler) {
         super();
@@ -57,7 +60,12 @@ class Compilation extends Tapable {
             const chunk = this.chunks[i];
             chunk.files = [];
             const file = chunk.name + '.js';
-            const source = mainRender({entryId: chunk.entryModule.moduleId, modules: chunk.modules});
+            let source;
+            if (chunk.async) {
+                source = chunkRender({chunkName: chunk.name, modules: chunk.modules});
+            } else {
+                source = mainRender({entryId: chunk.entryModule.moduleId, modules: chunk.modules});
+            }
             chunk.files.push(file);
             this.emitAsset(file, source);
         }
@@ -75,7 +83,7 @@ class Compilation extends Tapable {
         });
     }
 
-    _addModuleChain(context, dependency, name, callback) {
+    _addModuleChain(context, dependency, name, async, callback) {
         // 拿到 dependency 的构造函数
         const Dep = dependency.constructor;
         // 获取到Dep对应的模块工厂（模块和模块之间工厂方法不同）
@@ -86,7 +94,8 @@ class Compilation extends Tapable {
             context: this.context,
             rawRequest: dependency.request,
             resource: path.posix.join(context, dependency.request),
-            parser
+            parser,
+            async
         });
         // 构建模块ID（和文件相对路径一致）
         module.moduleId = '.' + path.posix.sep + path.posix.relative(this.context, module.resource);
